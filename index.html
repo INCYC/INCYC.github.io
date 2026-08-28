@@ -58,11 +58,11 @@
   /* ---------- HERO ---------- */
   .hero {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 0 6vw;
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 5vw;
+    align-items: center;
+    padding: 140px 6vw 100px;
     position: relative;
     background:
       radial-gradient(ellipse at 20% 15%, rgba(201,111,52,0.14), transparent 55%),
@@ -70,12 +70,51 @@
       var(--dusk);
   }
 
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    position: relative;
+  }
+  .hero-photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(201,111,52,0.18), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
   .hero::after {
     content: "";
     position: absolute;
-    left: 6vw; right: 6vw; bottom: 14%;
+    left: 6vw; right: 6vw; bottom: 8%;
     height: 1px;
     background: var(--hairline);
+  }
+
+  @media (max-width: 860px) {
+    .hero {
+      grid-template-columns: 1fr;
+      padding: 120px 6vw 60px;
+      gap: 40px;
+    }
+    .hero-photo {
+      order: -1;
+      aspect-ratio: 16 / 10;
+    }
   }
 
   .eyebrow {
@@ -434,6 +473,7 @@
 </nav>
 
 <section class="hero">
+  <div class="hero-text">
   <div class="eyebrow">Providence, RI</div>
   <h1 class="band-name display">I'm Not Crying,<br>You're Crying</h1>
   <p class="hero-sub">Rootsy indie rock for your mind, body, and soul.</p>
@@ -475,6 +515,11 @@
   <div class="hero-cta">
     <a class="btn solid" href="https://incyc.bandcamp.com/" target="_blank" rel="noopener">Listen on Bandcamp</a>
     <a class="btn" href="#shows">See shows</a>
+  </div>
+  </div>
+
+  <div class="hero-photo">
+    <img src="band-photo.webp" alt="I'm Not Crying, You're Crying performing live" loading="eager">
   </div>
 </section>
 
@@ -530,7 +575,7 @@
   <div class="lineup-grid">
     <div class="member">
       <div class="photo">Photo</div>
-      <h4>James Beaver</h4>
+      <h4>Jim Beaver</h4>
       <div class="role">Vocals / Guitar / Harmonica</div>
     </div>
     <div class="member">
