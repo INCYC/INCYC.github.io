@@ -637,21 +637,31 @@ var $mcj = jQuery.noConflict(true);
 </script>
 
 <script>
-// Hero photo rotation — auto-detects hero-1.jpg, hero-2.jpg, hero-3.jpg, etc.
+// Hero photo rotation — auto-detects hero-1, hero-2, hero-3, etc.
 // To add a photo: just upload the next number in sequence (e.g. hero-4.jpg).
+// Case-insensitive on the extension — .jpg, .JPG, .jpeg, .JPEG all work.
 // No code changes needed — this probes upward until a number is missing.
 (function () {
   var heroImg = document.getElementById('heroImg');
   if (!heroImg) return;
 
-  function checkImage(n) {
+  var EXTENSIONS = ['jpg', 'JPG', 'jpeg', 'JPEG'];
+
+  function tryExtension(n, extIndex) {
     return new Promise(function (resolve) {
+      if (extIndex >= EXTENSIONS.length) { resolve(null); return; }
       var img = new Image();
-      var src = 'hero-' + n + '.jpg';
+      var src = 'hero-' + n + '.' + EXTENSIONS[extIndex];
       img.onload = function () { resolve(src); };
-      img.onerror = function () { resolve(null); };
+      img.onerror = function () {
+        tryExtension(n, extIndex + 1).then(resolve);
+      };
       img.src = src;
     });
+  }
+
+  function checkImage(n) {
+    return tryExtension(n, 0);
   }
 
   async function detectImages() {
