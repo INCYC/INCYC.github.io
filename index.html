@@ -95,6 +95,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: opacity 0.6s ease;
   }
 
   .hero::after {
@@ -526,7 +527,7 @@
   </div>
 
   <div class="hero-photo">
-    <img src="band-photo.webp" alt="I'm Not Crying, You're Crying performing live" loading="eager">
+    <img id="heroImg" src="hero-1.jpg" alt="I'm Not Crying, You're Crying performing live" loading="eager">
   </div>
 </section>
 
@@ -633,6 +634,52 @@
   fnames[2]='LNAME'; ftypes[2]='text';
 }(jQuery));
 var $mcj = jQuery.noConflict(true);
+</script>
+
+<script>
+// Hero photo rotation — auto-detects hero-1.jpg, hero-2.jpg, hero-3.jpg, etc.
+// To add a photo: just upload the next number in sequence (e.g. hero-4.jpg).
+// No code changes needed — this probes upward until a number is missing.
+(function () {
+  var heroImg = document.getElementById('heroImg');
+  if (!heroImg) return;
+
+  function checkImage(n) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      var src = 'hero-' + n + '.jpg';
+      img.onload = function () { resolve(src); };
+      img.onerror = function () { resolve(null); };
+      img.src = src;
+    });
+  }
+
+  async function detectImages() {
+    var found = [];
+    var n = 1;
+    while (true) {
+      var src = await checkImage(n);
+      if (!src) break;
+      found.push(src);
+      n++;
+    }
+    return found;
+  }
+
+  detectImages().then(function (images) {
+    if (images.length <= 1) return; // nothing to rotate
+
+    var idx = 0;
+    setInterval(function () {
+      idx = (idx + 1) % images.length;
+      heroImg.style.opacity = 0;
+      setTimeout(function () {
+        heroImg.src = images[idx];
+        heroImg.style.opacity = 1;
+      }, 400);
+    }, 10000);
+  });
+})();
 </script>
 
 </body>
