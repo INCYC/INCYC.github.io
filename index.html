@@ -635,15 +635,16 @@ var $mcj = jQuery.noConflict(true);
 </script>
 
 <script>
-// Hero photo rotation — auto-detects hero-1, hero-2, hero-3, etc.
-// To add a photo: just upload the next number in sequence (e.g. hero-4.jpg).
+// Hero photo rotation — auto-detects hero-1 through hero-50.
+// Gaps are fine (e.g. hero-1, hero-3 with no hero-2 both still get used).
+// To add a photo: upload any unused number, no code changes needed.
 // Case-insensitive on the extension — .jpg, .JPG, .jpeg, .JPEG all work.
-// No code changes needed — this probes upward until a number is missing.
 (function () {
   var heroImg = document.getElementById('heroImg');
   if (!heroImg) return;
 
   var EXTENSIONS = ['jpg', 'JPG', 'jpeg', 'JPEG'];
+  var MAX_N = 50;
 
   function tryExtension(n, extIndex) {
     return new Promise(function (resolve) {
@@ -663,15 +664,12 @@ var $mcj = jQuery.noConflict(true);
   }
 
   async function detectImages() {
-    var found = [];
-    var n = 1;
-    while (true) {
-      var src = await checkImage(n);
-      if (!src) break;
-      found.push(src);
-      n++;
+    var checks = [];
+    for (var n = 1; n <= MAX_N; n++) {
+      checks.push(checkImage(n));
     }
-    return found;
+    var results = await Promise.all(checks);
+    return results.filter(function (src) { return src !== null; });
   }
 
   detectImages().then(function (images) {
