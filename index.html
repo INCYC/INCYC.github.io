@@ -262,6 +262,17 @@
   }
 
   /* ---------- SHOWS ---------- */
+  .subsection-head {
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--wheat);
+    margin-bottom: 18px;
+  }
+  .subsection-head-past {
+    margin-top: 48px;
+  }
   .setlist { max-width: 780px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
   .set-item {
     display: grid;
@@ -575,7 +586,9 @@
     <span class="tag">02</span>
     <h2>Shows</h2>
   </div>
-  <div class="setlist" id="showsList">
+
+  <h3 class="subsection-head">Upcoming</h3>
+  <div class="setlist" id="upcomingShowsList">
     <div class="set-item">
       <div class="num">—</div>
       <div>
@@ -583,6 +596,9 @@
       </div>
     </div>
   </div>
+
+  <h3 class="subsection-head subsection-head-past">Past Shows</h3>
+  <div class="setlist" id="pastShowsList"></div>
 </section>
 
 <section id="lineup">
@@ -705,8 +721,9 @@ var $mcj = jQuery.noConflict(true);
 // ADDRESS (upcoming — becomes a Google Maps link), VIDEO (past — becomes a link).
 // Leave out any field you don't have; a show only needs STATUS, TITLE, DATE.
 (function () {
-  var listEl = document.getElementById('showsList');
-  if (!listEl) return;
+  var upcomingListEl = document.getElementById('upcomingShowsList');
+  var pastListEl = document.getElementById('pastShowsList');
+  if (!upcomingListEl || !pastListEl) return;
 
   function parseShowsText(text) {
     var blocks = text.split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
@@ -884,7 +901,6 @@ var $mcj = jQuery.noConflict(true);
       linksHtml += '<a href="' + show.VIDEO + '" target="_blank" rel="noopener">Watch Video</a>';
     }
 
-    var pill = isPast ? '<span class="pill">Past show</span>' : '';
 
     return (
       '<div class="set-item">' +
@@ -894,13 +910,12 @@ var $mcj = jQuery.noConflict(true);
           (metaParts.length ? '<div class="meta">' + metaParts.join(' — ') + '</div>' : '') +
           (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
         '</div>' +
-        pill +
       '</div>'
     );
   }
 
-  function attachCalendarLinks() {
-    listEl.querySelectorAll('[data-ics-index]').forEach(function (link) {
+  function attachCalendarLinks(container) {
+    container.querySelectorAll('[data-ics-index]').forEach(function (link) {
       link.addEventListener('click', function (e) {
         e.preventDefault();
         var text = icsRegistry[link.getAttribute('data-ics-index')];
@@ -912,6 +927,8 @@ var $mcj = jQuery.noConflict(true);
       });
     });
   }
+
+  var emptyRow = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
 
   fetch('shows.txt?_=' + Date.now(), { cache: 'no-store' })
     .then(function (res) {
@@ -926,16 +943,14 @@ var $mcj = jQuery.noConflict(true);
       upcoming.sort(function (a, b) { return new Date(a.DATE) - new Date(b.DATE); });
       past.sort(function (a, b) { return new Date(b.DATE) - new Date(a.DATE); });
 
-      var ordered = upcoming.concat(past);
-      if (ordered.length === 0) {
-        listEl.innerHTML = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
-        return;
-      }
-      listEl.innerHTML = ordered.map(renderShow).join('');
-      attachCalendarLinks();
+      upcomingListEl.innerHTML = upcoming.length ? upcoming.map(renderShow).join('') : emptyRow;
+      pastListEl.innerHTML = past.length ? past.map(renderShow).join('') : emptyRow;
+
+      attachCalendarLinks(upcomingListEl);
     })
     .catch(function () {
-      listEl.innerHTML = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
+      upcomingListEl.innerHTML = emptyRow;
+      pastListEl.innerHTML = emptyRow;
     });
 })();
 </script>
