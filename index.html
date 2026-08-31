@@ -791,10 +791,19 @@ var $mcj = jQuery.noConflict(true);
 
     var location = [show.VENUE, show.ADDRESS].filter(Boolean).join(', ');
 
+    var now = new Date();
+    var dtstamp = now.getUTCFullYear() + pad(now.getUTCMonth() + 1) + pad(now.getUTCDate()) +
+      'T' + pad(now.getUTCHours()) + pad(now.getUTCMinutes()) + pad(now.getUTCSeconds()) + 'Z';
+    var uid = startStr + '-' + (show.TITLE || 'show').replace(/[^a-z0-9]+/gi, '') + '@incyc-band';
+
     var lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
+      'PRODID:-//INCYC//Band Website//EN',
+      'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + dtstamp,
       allDay ? ('DTSTART;VALUE=DATE:' + startStr) : ('DTSTART:' + startStr),
       allDay ? ('DTEND;VALUE=DATE:' + endStr) : ('DTEND:' + endStr),
       'SUMMARY:' + (show.TITLE || 'Show'),
@@ -803,7 +812,7 @@ var $mcj = jQuery.noConflict(true);
       'END:VCALENDAR'
     ].filter(Boolean).join('\r\n');
 
-    return 'data:text/calendar;charset=utf8,' + encodeURIComponent(lines);
+    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines);
   }
 
   function renderShow(show) {
@@ -825,7 +834,7 @@ var $mcj = jQuery.noConflict(true);
       }
       var ics = icsDataUrl(show);
       if (ics) {
-        linksHtml += '<a href="' + ics + '" target="_blank" rel="noopener">Add to Calendar</a>';
+        linksHtml += '<a href="' + ics + '">Add to Calendar</a>';
       }
     }
     if (isPast && show.VIDEO) {
