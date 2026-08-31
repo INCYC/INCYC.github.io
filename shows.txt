@@ -4,7 +4,7 @@ DATE: 2026-06-10
 VENUE: Providence, RI
 VIDEO:https://www.instagram.com/reel/DZLAAWnpYj8/?igsi=MWJyMDI4MWVyZW9wOQ==
 
-STATUS: future
+STATUS: upcoming
 TITLE: PVDFest Battle of the Bands
 DATE: 2026-09-19
 TIME: 5:00PM (show start - specific time tbd)
