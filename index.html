@@ -735,8 +735,7 @@ var $mcj = jQuery.noConflict(true);
 
   function parseTimeTo24h(timeStr) {
     // Parses "7:00 PM" -> {h: 19, m: 0}. Returns null if it can't parse.
-    var match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec((timeStr || '').trim());
-    if (!match) return null;
+    var match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec((timeStr || '').trim());    if (!match) return null;
     var h = parseInt(match[1], 10);
     var m = parseInt(match[2], 10);
     var ampm = match[3].toUpperCase();
@@ -747,9 +746,11 @@ var $mcj = jQuery.noConflict(true);
 
   function parseTimeField(timeStr) {
     // Accepts a single time ("7:00 PM") or a range ("7:00 PM - 9:00 PM",
-    // "7:00 PM–9:00 PM", "7:00PM to 9:00PM"). Returns {start, end} — end is
-    // null if only a single time was given (falls back to default duration).
-    var raw = (timeStr || '').trim();
+    // "7:00 PM–9:00 PM", "7:00PM to 9:00PM"). Trailing notes in parentheses
+    // are ignored, e.g. "5:00PM (exact time TBD)" still parses as 5:00 PM.
+    // Returns {start, end} — end is null if only a single time was given
+    // (falls back to default duration).
+    var raw = (timeStr || '').replace(/\([^)]*\)/g, '').trim();
     if (!raw) return null;
     var parts = raw.split(/\s*(?:-|–|—|to)\s*/i);
     var start = parseTimeTo24h(parts[0]);
@@ -847,15 +848,15 @@ var $mcj = jQuery.noConflict(true);
     );
   }
 
-  fetch('shows.txt')
+  fetch('shows.txt?_=' + Date.now(), { cache: 'no-store' })
     .then(function (res) {
       if (!res.ok) throw new Error('shows.txt not found');
       return res.text();
     })
     .then(function (text) {
       var shows = parseShowsText(text);
-      var upcoming = shows.filter(function (s) { return (s.STATUS || '').toLowerCase() === 'upcoming'; });
       var past = shows.filter(function (s) { return (s.STATUS || '').toLowerCase() === 'past'; });
+      var upcoming = shows.filter(function (s) { return (s.STATUS || '').toLowerCase() !== 'past'; });
 
       upcoming.sort(function (a, b) { return new Date(a.DATE) - new Date(b.DATE); });
       past.sort(function (a, b) { return new Date(b.DATE) - new Date(a.DATE); });
