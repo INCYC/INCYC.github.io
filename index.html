@@ -615,7 +615,7 @@
     <h2>Get In Touch</h2>
   </div>
   <div class="contact-cta">
-    <p>Booking a show, licensing a track, or just want to say hi — send us a note.</p>
+    <p>Booking a show, licensing a track, or just want to say hi — click below or reach out to us at incycband@gmail.com.</p>
     <a class="btn solid" href="mailto:incycband@gmail.com">Reach Out to the Band</a>
   </div>
 </section>
@@ -866,8 +866,9 @@ var $mcj = jQuery.noConflict(true);
 
     var linksHtml = '';
     if (!isPast) {
-      if (show.ADDRESS) {
-        linksHtml += '<a href="' + mapsLink(show.ADDRESS) + '" target="_blank" rel="noopener">Get Directions</a>';
+      var locationForMaps = show.ADDRESS || show.VENUE;
+      if (locationForMaps) {
+        linksHtml += '<a href="' + mapsLink(locationForMaps) + '" target="_blank" rel="noopener">Get Directions</a>';
       }
       var text = icsText(show);
       if (text) {
