@@ -761,7 +761,7 @@ var $mcj = jQuery.noConflict(true);
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-  function icsText(show) {
+  function buildEventTimes(show) {
     var dateParts = (show.DATE || '').split('-');
     if (dateParts.length !== 3) return null;
     var year = dateParts[0], month = dateParts[1], day = dateParts[2];
@@ -788,6 +788,43 @@ var $mcj = jQuery.noConflict(true);
       startStr = year + month + day;
       endStr = year + month + day;
     }
+
+    return { startStr: startStr, endStr: endStr, allDay: allDay, year: year, month: month, day: day };
+  }
+
+  function addDaysToYMD(y, m, d, n) {
+    var dt = new Date(Date.UTC(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10)));
+    dt.setUTCDate(dt.getUTCDate() + n);
+    return dt.getUTCFullYear() + pad(dt.getUTCMonth() + 1) + pad(dt.getUTCDate());
+  }
+
+  function googleCalendarLink(show) {
+    var times = buildEventTimes(show);
+    if (!times) return null;
+
+    var datesParam;
+    if (times.allDay) {
+      var endExclusive = addDaysToYMD(times.year, times.month, times.day, 1);
+      datesParam = times.startStr + '/' + endExclusive;
+    } else {
+      datesParam = times.startStr + '/' + times.endStr;
+    }
+
+    var location = [show.VENUE, show.ADDRESS].filter(Boolean).join(', ');
+    var params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: show.TITLE || 'Show',
+      dates: datesParam
+    });
+    if (location) params.set('location', location);
+
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  }
+
+  function icsText(show) {
+    var times = buildEventTimes(show);
+    if (!times) return null;
+    var startStr = times.startStr, endStr = times.endStr, allDay = times.allDay;
 
     var location = [show.VENUE, show.ADDRESS].filter(Boolean).join(', ');
 
@@ -836,6 +873,10 @@ var $mcj = jQuery.noConflict(true);
       if (text) {
         icsRegistry[index] = text;
         linksHtml += '<a href="#" data-ics-index="' + index + '">Add to Calendar</a>';
+      }
+      var gcalLink = googleCalendarLink(show);
+      if (gcalLink) {
+        linksHtml += '<a href="' + gcalLink + '" target="_blank" rel="noopener">Google Calendar</a>';
       }
     }
     if (isPast && show.VIDEO) {
