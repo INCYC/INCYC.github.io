@@ -761,7 +761,7 @@ var $mcj = jQuery.noConflict(true);
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-  function icsDataUrl(show) {
+  function icsText(show) {
     var dateParts = (show.DATE || '').split('-');
     if (dateParts.length !== 3) return null;
     var year = dateParts[0], month = dateParts[1], day = dateParts[2];
@@ -796,7 +796,7 @@ var $mcj = jQuery.noConflict(true);
       'T' + pad(now.getUTCHours()) + pad(now.getUTCMinutes()) + pad(now.getUTCSeconds()) + 'Z';
     var uid = startStr + '-' + (show.TITLE || 'show').replace(/[^a-z0-9]+/gi, '') + '@incyc-band';
 
-    var lines = [
+    return [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//INCYC//Band Website//EN',
@@ -811,11 +811,11 @@ var $mcj = jQuery.noConflict(true);
       'END:VEVENT',
       'END:VCALENDAR'
     ].filter(Boolean).join('\r\n');
-
-    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines);
   }
 
-  function renderShow(show) {
+  var icsRegistry = {}; // holds raw ICS text per show, keyed by index, for click-time Blob generation
+
+  function renderShow(show, index) {
     var isPast = (show.STATUS || '').toLowerCase() === 'past';
     var metaParts = [];
     if (!isPast) {
@@ -832,9 +832,10 @@ var $mcj = jQuery.noConflict(true);
       if (show.ADDRESS) {
         linksHtml += '<a href="' + mapsLink(show.ADDRESS) + '" target="_blank" rel="noopener">Get Directions</a>';
       }
-      var ics = icsDataUrl(show);
-      if (ics) {
-        linksHtml += '<a href="' + ics + '">Add to Calendar</a>';
+      var text = icsText(show);
+      if (text) {
+        icsRegistry[index] = text;
+        linksHtml += '<a href="#" data-ics-index="' + index + '">Add to Calendar</a>';
       }
     }
     if (isPast && show.VIDEO) {
@@ -856,6 +857,20 @@ var $mcj = jQuery.noConflict(true);
     );
   }
 
+  function attachCalendarLinks() {
+    listEl.querySelectorAll('[data-ics-index]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        var text = icsRegistry[link.getAttribute('data-ics-index')];
+        if (!text) return;
+        var blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        window.location.href = url;
+        setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      });
+    });
+  }
+
   fetch('shows.txt?_=' + Date.now(), { cache: 'no-store' })
     .then(function (res) {
       if (!res.ok) throw new Error('shows.txt not found');
@@ -875,6 +890,7 @@ var $mcj = jQuery.noConflict(true);
         return;
       }
       listEl.innerHTML = ordered.map(renderShow).join('');
+      attachCalendarLinks();
     })
     .catch(function () {
       listEl.innerHTML = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
