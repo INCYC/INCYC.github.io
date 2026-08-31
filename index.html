@@ -873,11 +873,11 @@ var $mcj = jQuery.noConflict(true);
       var text = icsText(show);
       if (text) {
         icsRegistry[index] = text;
-        linksHtml += '<a href="#" data-ics-index="' + index + '">Add to Calendar</a>';
+        linksHtml += '<a href="#" data-ics-index="' + index + '">Add to Apple Calendar</a>';
       }
       var gcalLink = googleCalendarLink(show);
       if (gcalLink) {
-        linksHtml += '<a href="' + gcalLink + '" target="_blank" rel="noopener">Google Calendar</a>';
+        linksHtml += '<a href="' + gcalLink + '" target="_blank" rel="noopener">Add to Google Calendar</a>';
       }
     }
     if (isPast && show.VIDEO) {
