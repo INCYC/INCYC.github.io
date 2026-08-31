@@ -288,6 +288,18 @@
     color: var(--wheat);
     white-space: nowrap;
   }
+  .set-item .links {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+  }
+  .set-item .links a {
+    font-size: 0.8rem;
+    color: var(--harvest);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .set-item .links a:hover { color: var(--wheat); }
   .note {
     margin-top: 20px;
     color: var(--paper-dim);
@@ -563,14 +575,12 @@
     <span class="tag">02</span>
     <h2>Shows</h2>
   </div>
-  <div class="setlist">
+  <div class="setlist" id="showsList">
     <div class="set-item">
       <div class="num">—</div>
       <div>
-        <h3>PVD Porchfest</h3>
-        <div class="meta">Providence, RI — full set recorded and shared on SoundCloud</div>
+        <h3>Loading shows…</h3>
       </div>
-      <span class="pill">Past show</span>
     </div>
   </div>
 </section>
@@ -685,6 +695,102 @@ var $mcj = jQuery.noConflict(true);
       }, 400);
     }, 10000);
   });
+})();
+</script>
+
+<script>
+// Shows section — reads shows.txt and renders upcoming/past shows.
+// Format: blocks separated by a blank line, one "KEY: value" per line.
+// Fields: STATUS (upcoming/past), TITLE, DATE (YYYY-MM-DD), TIME, VENUE,
+// ADDRESS (upcoming — becomes a Google Maps link), VIDEO (past — becomes a link).
+// Leave out any field you don't have; a show only needs STATUS, TITLE, DATE.
+(function () {
+  var listEl = document.getElementById('showsList');
+  if (!listEl) return;
+
+  function parseShowsText(text) {
+    var blocks = text.split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+    return blocks.map(function (block) {
+      var obj = {};
+      block.split('\n').forEach(function (line) {
+        var idx = line.indexOf(':');
+        if (idx === -1) return;
+        var key = line.slice(0, idx).trim().toUpperCase();
+        var val = line.slice(idx + 1).trim();
+        obj[key] = val;
+      });
+      return obj;
+    }).filter(function (s) { return s.TITLE && s.DATE; });
+  }
+
+  function formatDate(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00Z');
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  function mapsLink(address) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+  }
+
+  function renderShow(show) {
+    var isPast = (show.STATUS || '').toLowerCase() === 'past';
+    var metaParts = [];
+    if (!isPast) {
+      var when = formatDate(show.DATE);
+      if (show.TIME) when += ' · ' + show.TIME;
+      metaParts.push(when);
+      if (show.VENUE) metaParts.push(show.VENUE);
+    } else {
+      if (show.VENUE) metaParts.push(show.VENUE);
+    }
+
+    var linksHtml = '';
+    if (!isPast && show.ADDRESS) {
+      linksHtml += '<a href="' + mapsLink(show.ADDRESS) + '" target="_blank" rel="noopener">Get Directions</a>';
+    }
+    if (isPast && show.VIDEO) {
+      linksHtml += '<a href="' + show.VIDEO + '" target="_blank" rel="noopener">Watch Video</a>';
+    }
+
+    var pill = isPast ? '<span class="pill">Past show</span>' : '';
+
+    return (
+      '<div class="set-item">' +
+        '<div class="num">—</div>' +
+        '<div>' +
+          '<h3>' + show.TITLE + '</h3>' +
+          (metaParts.length ? '<div class="meta">' + metaParts.join(' — ') + '</div>' : '') +
+          (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
+        '</div>' +
+        pill +
+      '</div>'
+    );
+  }
+
+  fetch('shows.txt')
+    .then(function (res) {
+      if (!res.ok) throw new Error('shows.txt not found');
+      return res.text();
+    })
+    .then(function (text) {
+      var shows = parseShowsText(text);
+      var upcoming = shows.filter(function (s) { return (s.STATUS || '').toLowerCase() === 'upcoming'; });
+      var past = shows.filter(function (s) { return (s.STATUS || '').toLowerCase() === 'past'; });
+
+      upcoming.sort(function (a, b) { return new Date(a.DATE) - new Date(b.DATE); });
+      past.sort(function (a, b) { return new Date(b.DATE) - new Date(a.DATE); });
+
+      var ordered = upcoming.concat(past);
+      if (ordered.length === 0) {
+        listEl.innerHTML = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
+        return;
+      }
+      listEl.innerHTML = ordered.map(renderShow).join('');
+    })
+    .catch(function () {
+      listEl.innerHTML = '<div class="set-item"><div class="num">—</div><div><h3>No shows booked yet — check back soon</h3></div></div>';
+    });
 })();
 </script>
 
