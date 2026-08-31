@@ -825,8 +825,7 @@ var $mcj = jQuery.noConflict(true);
       }
       var ics = icsDataUrl(show);
       if (ics) {
-        var filename = (show.TITLE || 'show').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.ics';
-        linksHtml += '<a href="' + ics + '" download="' + filename + '">Add to Calendar</a>';
+        linksHtml += '<a href="' + ics + '" target="_blank" rel="noopener">Add to Calendar</a>';
       }
     }
     if (isPast && show.VIDEO) {
