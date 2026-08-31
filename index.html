@@ -733,6 +733,78 @@ var $mcj = jQuery.noConflict(true);
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
   }
 
+  function parseTimeTo24h(timeStr) {
+    // Parses "7:00 PM" -> {h: 19, m: 0}. Returns null if it can't parse.
+    var match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec((timeStr || '').trim());
+    if (!match) return null;
+    var h = parseInt(match[1], 10);
+    var m = parseInt(match[2], 10);
+    var ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return { h: h, m: m };
+  }
+
+  function parseTimeField(timeStr) {
+    // Accepts a single time ("7:00 PM") or a range ("7:00 PM - 9:00 PM",
+    // "7:00 PM–9:00 PM", "7:00PM to 9:00PM"). Returns {start, end} — end is
+    // null if only a single time was given (falls back to default duration).
+    var raw = (timeStr || '').trim();
+    if (!raw) return null;
+    var parts = raw.split(/\s*(?:-|–|—|to)\s*/i);
+    var start = parseTimeTo24h(parts[0]);
+    if (!start) return null;
+    var end = parts.length > 1 ? parseTimeTo24h(parts[1]) : null;
+    return { start: start, end: end };
+  }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function icsDataUrl(show) {
+    var dateParts = (show.DATE || '').split('-');
+    if (dateParts.length !== 3) return null;
+    var year = dateParts[0], month = dateParts[1], day = dateParts[2];
+
+    var startStr, endStr, allDay = false;
+    var parsed = parseTimeField(show.TIME);
+
+    if (parsed) {
+      var startH = pad(parsed.start.h), startM = pad(parsed.start.m);
+      startStr = year + month + day + 'T' + startH + startM + '00';
+
+      var endH, endM;
+      if (parsed.end) {
+        endH = parsed.end.h;
+        endM = parsed.end.m;
+      } else {
+        endH = parsed.start.h + 2; // default 2-hour duration
+        endM = parsed.start.m;
+        if (endH >= 24) { endH -= 24; } // doesn't roll the calendar date, close enough for a default
+      }
+      endStr = year + month + day + 'T' + pad(endH) + pad(endM) + '00';
+    } else {
+      allDay = true;
+      startStr = year + month + day;
+      endStr = year + month + day;
+    }
+
+    var location = [show.VENUE, show.ADDRESS].filter(Boolean).join(', ');
+
+    var lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      allDay ? ('DTSTART;VALUE=DATE:' + startStr) : ('DTSTART:' + startStr),
+      allDay ? ('DTEND;VALUE=DATE:' + endStr) : ('DTEND:' + endStr),
+      'SUMMARY:' + (show.TITLE || 'Show'),
+      location ? ('LOCATION:' + location) : '',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+
+    return 'data:text/calendar;charset=utf8,' + encodeURIComponent(lines);
+  }
+
   function renderShow(show) {
     var isPast = (show.STATUS || '').toLowerCase() === 'past';
     var metaParts = [];
@@ -746,8 +818,15 @@ var $mcj = jQuery.noConflict(true);
     }
 
     var linksHtml = '';
-    if (!isPast && show.ADDRESS) {
-      linksHtml += '<a href="' + mapsLink(show.ADDRESS) + '" target="_blank" rel="noopener">Get Directions</a>';
+    if (!isPast) {
+      if (show.ADDRESS) {
+        linksHtml += '<a href="' + mapsLink(show.ADDRESS) + '" target="_blank" rel="noopener">Get Directions</a>';
+      }
+      var ics = icsDataUrl(show);
+      if (ics) {
+        var filename = (show.TITLE || 'show').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.ics';
+        linksHtml += '<a href="' + ics + '" download="' + filename + '">Add to Calendar</a>';
+      }
     }
     if (isPast && show.VIDEO) {
       linksHtml += '<a href="' + show.VIDEO + '" target="_blank" rel="noopener">Watch Video</a>';
