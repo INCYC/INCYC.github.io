@@ -13,4 +13,5 @@ VENUE: Burnside Park, Providence, RI
 STATUS: future
 TITLE: Oktoberfest
 DATE: 2026-10-24
+TIME: 5pm
 VENUE: Wakefield, RI
