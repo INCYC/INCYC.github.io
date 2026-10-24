@@ -9,3 +9,8 @@ TITLE: PVDFest Battle of the Bands
 DATE: 2026-09-19
 TIME: 5:50 PM (when we play!)
 VENUE: Burnside Park, Providence, RI
+
+STATUS: future
+TITLE: Oktoberfest
+DATE: 2026-10-24
+VENUE: Wakefield, RI
