@@ -10,7 +10,7 @@ DATE: 2026-09-19
 TIME: 5:50 PM (when we play!)
 VENUE: Burnside Park, Providence, RI
 
-STATUS: future
+STATUS: past
 TITLE: Oktoberfest
 DATE: 2026-10-24
 TIME: 5pm
