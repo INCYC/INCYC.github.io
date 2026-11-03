@@ -878,6 +878,7 @@ var $mcj = jQuery.noConflict(true);
       metaParts.push(when);
       if (show.VENUE) metaParts.push(show.VENUE);
     } else {
+      if (show.DATE) metaParts.push(formatDate(show.DATE));
       if (show.VENUE) metaParts.push(show.VENUE);
     }
 
