@@ -15,3 +15,4 @@ TITLE: Oktoberfest
 DATE: 2026-10-24
 TIME: 5pm
 VENUE: Wakefield, RI
+VIDEO:https://youtube.com/shorts/L3_X-Ku6Crk?feature=shared
